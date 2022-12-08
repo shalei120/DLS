@@ -141,7 +141,9 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
         model = build_model(state_dict or model.state_dict()).to(device)
         if str(device) == "cpu":
             model.float()
-        return model, _transform(model.visual.input_resolution)
+        return model, _transform(model.visual.input_resolution), {
+            'transformer_width':  model.state_dict()["ln_final.weight"].shape[0],
+        }
 
     # patch the device names
     device_holder = torch.jit.trace(lambda: torch.ones([]).to(torch.device(device)), example_inputs=[])
@@ -193,7 +195,9 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
 
         model.float()
 
-    return model, _transform(model.input_resolution.item())
+    return model, _transform(model.input_resolution.item()), {
+        'transformer_width':  state_dict["ln_final.weight"].shape[0],
+    }
 
 
 def tokenize(texts: Union[str, List[str]], context_length: int = 77, truncate: bool = False) -> Union[torch.IntTensor, torch.LongTensor]:

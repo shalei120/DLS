@@ -130,3 +130,9 @@ class SimpleTokenizer(object):
         text = ''.join([self.decoder[token] for token in tokens])
         text = bytearray([self.byte_decoder[c] for c in text]).decode('utf-8', errors="replace").replace('</w>', ' ')
         return text
+
+if __name__ == '__main__':
+    st = SimpleTokenizer()
+    s = st.encode('I am a boyscott.')
+    print(s)
+    print(st.decode([344,556,2224,344,36,726]))
