@@ -81,7 +81,7 @@ class VQVAE(nn.Module):
             z_e  = z_e.unsqueeze(2).unsqueeze(3)
         elif input_mode == 'i':
             z_e = self.encoder(x)
-
+        z_e = z_e.to(torch.float32)
         z_e = self.pre_quantization_conv(z_e)
         embedding_loss, z_q, perplexity, _, _ = self.vector_quantization(
             z_e)

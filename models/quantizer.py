@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from Hyperparameters import args
 
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = args['device']
 
 
 class VectorQuantizer(nn.Module):
