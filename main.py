@@ -150,7 +150,7 @@ class task:
                     recon_loss = torch.mean((x_hat - x)**2) / x_train_var
                     loss = recon_loss + embedding_loss
                 elif in_mode == 't':
-                    recon_loss = CEloss(torch.transpose(x_hat, 1, 2), batch.targetSeqs)
+                    recon_loss = CEloss(torch.transpose(x_hat, 1, 2), x_target)
                     recon_loss = recon_loss.mean()
                     loss = recon_loss + embedding_loss
 
@@ -204,7 +204,12 @@ class task:
 
             # print([len(g) for g in gen_out])
             for i in range(len(gen_out)):
-                indexes = gen_out[i][0]["tokens"]
+                try:
+                    indexes = gen_out[i][0]["tokens"]
+                except:
+                    print(len(gen_out),i,gen_out)
+                    indexes = gen_out[i][0]["tokens"]
+
                 indexes = indexes.int().cpu()
                 h = self.Make_string(self.external_info['w2i'], indexes, '</w>', unk_string="UNKNOWNTOKENINREF")
 
