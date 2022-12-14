@@ -34,6 +34,9 @@ from argparse import Namespace
 # whether or not to save model
 # parser.add_argument("-save", action="store_true")
 # parser.add_argument("--filename",  type=str, default=timestamp)
+import random
+random.seed(0)
+torch.manual_seed(42)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', '-g')
@@ -108,7 +111,7 @@ class task:
         Set up optimizer and training loop
         """
         self.optimizer = optim.Adam(self.model.parameters(), lr=args['learning_rate'], amsgrad=True)
-
+        
         self.model.train()
 
         self.results = {
@@ -119,7 +122,13 @@ class task:
         }
 
     def run(self):
+        print(args)
         self.train()
+
+    def printpar(self):
+        for name, param in self.model.named_parameters():
+            if param.requires_grad:
+                print(name, param.data)
 
 
     def train(self):
@@ -127,9 +136,13 @@ class task:
         in_mode, out_mode = args['mode'].split('->')
 
         CEloss = torch.nn.CrossEntropyLoss(reduction='none')
+        n_opti_batches = 0
 
         for i in range(args['n_updates']):
+            
             for batch in self.batches['train']:
+                n_opti_batches += 1
+                #self.printpar()
                 if in_mode == 't':
                     x = batch.encoderSeqs.to(args['device'])
                     x_decinput = batch.decoderSeqs.to(args['device'])
@@ -151,6 +164,10 @@ class task:
                     loss = recon_loss + embedding_loss
                 elif in_mode == 't':
                     recon_loss = CEloss(torch.transpose(x_hat, 1, 2), x_target)
+                    #print(x_hat.size(), x_target.size())
+                    #print('xtarget:', x_target)
+                    #print('recon:', recon_loss)
+                    #print('embloss:', embedding_loss)
                     recon_loss = recon_loss.mean()
                     loss = recon_loss + embedding_loss
 
@@ -162,20 +179,20 @@ class task:
                 self.results["loss_vals"].append(loss.cpu().detach().numpy())
                 self.results["n_updates"] = i
 
-                if i % args['log_interval'] == 0:
+                if n_opti_batches % args['log_interval'] == 0:
                     """
                     save model and print values
                     """
-                    self.evaluate('val')
+                    bleu = self.evaluate('val')
                     if args['save']:
                         hyperparameters = args
                         utils.save_model_and_results(
                             self.model, self.results, hyperparameters, args['filename'])
-
+                    
                     print('Update #', i, 'Recon Error:',
                           np.mean(self.results["recon_errors"][-args['log_interval']:]),
                           'Loss', np.mean(self.results["loss_vals"][-args['log_interval']:]),
-                          'Perplexity:', np.mean(self.results["perplexities"][-args['log_interval']:]))
+                          'Perplexity:', np.mean(self.results["perplexities"][-args['log_interval']:]), 'BLEU=',bleu)
 
 
     def evaluate(self, dataset_name):
@@ -184,7 +201,9 @@ class task:
 
         hyps, refs = [], []
 
+        idx = 0
         for batch in self.batches[dataset_name]:
+            idx += 1
             if in_mode == 't':
                 x = batch.encoderSeqs.to(args['device'])
                 raw_target = batch.raw_source
@@ -219,11 +238,11 @@ class task:
                 hyps.append(h)
                 refs.append([r])
 
-                if i == 0:
+                if i == 0:# and idx % 10 == 0:
                     print("example hypothesis: " + h)
                     print("example reference: " + r)
 
-        bleu_ori = corpus_bleu(gold_ans, pred_ans)
+        bleu_ori = corpus_bleu(refs, hyps)
         return bleu_ori
 
     def build_generator(self, models, args):

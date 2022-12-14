@@ -221,9 +221,9 @@ class TextData_COCO:
             random.shuffle(data)
             datanum = len(data)
             dataset={}
-            dataset['train'] = data[:int(0.8 * datanum)]
-            dataset['valid'] = data[int(0.8 * datanum):int(0.9 * datanum)]
-            dataset['test'] = data[int(0.9 * datanum):]
+            dataset['train'] = data[:(datanum-2000)]
+            dataset['valid'] = data[(datanum - 2000):(datanum - 1000)]
+            dataset['test'] = data[(datanum - 1000):]
             for setname in ['train', 'valid', 'test']:
                 dataset[setname] = [(clip.tokenize(src) , src) for src in tqdm(dataset[setname])]
             self.datasets = dataset

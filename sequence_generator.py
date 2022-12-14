@@ -250,6 +250,7 @@ class SequenceGenerator(nn.Module):
         encoder_outs = self.model.reorder_encoder_out(encoder_outs, new_order)
         # ensure encoder_outs is a List.
         assert encoder_outs is not None
+        #print('encoder_outs: ',encoder_outs)
 
         # initialize buffers
         scores = (
@@ -326,6 +327,7 @@ class SequenceGenerator(nn.Module):
                 incremental_states,
                 self.temperature,
             )
+            #print('lprobs:', lprobs)
 
             if self.lm_model is not None:
                 lm_out = self.lm_model(tokens[:, : step + 1])
