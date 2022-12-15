@@ -26,11 +26,11 @@ class HP:
 
         # args['embeddingSource'] = "GoogleNews-vectors-negative300.bin"
 
-        args['vq_embedding_dim'] = 64
+        args['vq_embedding_dim'] = 512 # 64
         args['vq_n_embeddings'] = 512
         args['vq_beta'] = 0.25
         args['learning_rate'] = 3e-4
-        args['log_interval'] = 50
+        args['log_interval'] = 1000
 
         args['adaptive_softmax_cutoff'] = None
         args['decoder_learned_pos'] = False
@@ -56,7 +56,7 @@ class HP:
 
         args['numEpochs'] = 1000
         args['saveEvery'] = 2000
-        args['batchSize'] = 32
+        args['batchSize'] = 128
         args['learningRate'] = 0.001
         args['dropout'] = 0.3
         args['clip'] = 5.0

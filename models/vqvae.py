@@ -57,6 +57,8 @@ class VQVAE(nn.Module):
         self.embedding_tgt = self.clipmodel.token_embedding
         args['embeddingSize'] = self.embedding_tgt.weight.size(1)
         self.clip_tf_width = info['transformer_width']
+        for name, param in self.clipmodel.named_parameters():
+            param.requires_grad_(False)
 
     def build_image2image(self, x, verbose=False):
 
@@ -81,12 +83,16 @@ class VQVAE(nn.Module):
             z_e  = z_e.unsqueeze(2).unsqueeze(3)
         elif input_mode == 'i':
             z_e = self.encoder(x)
+        
         z_e = z_e.to(torch.float32)
+        
+        #print(z_e.size())
         z_e = self.pre_quantization_conv(z_e)
-        embedding_loss, z_q, perplexity, _, _ = self.vector_quantization(
-            z_e)
+        embedding_loss, z_q, perplexity, _, _ = self.vector_quantization(z_e)
         z_q = z_q[:,:,0,0]
 
+        #print(z_q.size())
+        #embedding_loss, z_q, perplexity = 0, z_e[:,:,0,0], torch.Tensor(0)
         return embedding_loss, z_q, perplexity
 
 
@@ -106,6 +112,7 @@ class VQVAE(nn.Module):
         elif output_mode == 'i':
             x_hat = self.decoder(z_q)
 
+        #print('x_hat:', x_hat)
         return embedding_loss, x_hat, perplexity
 
     def get_normalized_probs(
